@@ -1,0 +1,18 @@
+{
+    // Python configuration
+    "python.analysis.autoImportCompletions": true,
+    "[python]": {
+        "editor.formatOnType": true
+    },
+    "python.testing.cwd": "${workspaceFolder}/",
+    "python.autoComplete.extraPaths": [
+        "${workspaceFolder}"
+    ],
+    "python.terminal.activateEnvInCurrentTerminal": true,
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}"
+    ],
+    "mypy-type-checker.cwd": "${workspaceFolder}",
+    "mypy-type-checker.importStrategy": "fromEnvironment",
+    "basedpyright.analysis.typeCheckingMode": "off"
+}

@@ -1,0 +1,108 @@
+[project]
+name = "affiliate_assistant"
+version = "0.1.0"
+description = "Backend for telegram web-app Affiliate Assistant"
+requires-python = ">=3.12"
+dependencies = [
+    "django>=5.2.8",
+    "django-cors-headers>=4.9.0",
+    "djangorestframework>=3.16.1",
+    "drf-access-policy>=1.5.0",
+    "drf-spectacular>=0.29.0",
+    "gunicorn>=23.0.0",
+    "loguru>=0.7.3",
+    "psycopg2-binary>=2.9.11",
+    "pyjwt>=2.10.1",
+    "requests>=2.32.5",
+]
+
+[dependency-groups]
+lint = [
+    "mypy>=1.19.0",
+    "ruff>=0.14.7",
+]
+typing = [
+    "django-stubs[compatible-mypy]>=1.9.0",
+    "djangorestframework-stubs[compatible-mypy]>=1.4.0",
+    "loguru-mypy>=0.0.4",
+    "types-psycopg2>=2.9.21.20251012",
+    "types-requests>=2.32.4.20250913",
+]
+
+
+[tool.ruff]
+line-length = 120
+extend-exclude = ["venv", "stubs", ".venv"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+unfixable = ["ERA001", "COM819"] # remove comment out code lines
+# COM819 prohibited-trailing-comma. Это фиксить должна format команда, чтоб как в black было
+# если есть запятая в конце - раскрывает на несколько строк. Если нет - оставляет в одной
+ignore = [
+    "Q", # flake8-quotes
+    "D100",	# undocumented-public-module	Missing docstring in public module
+    "D101",	# undocumented-public-class	"Missing" # docstring in public class
+    "D102",	# undocumented-public-method	Missing docstring "in" # public method
+    "D103",	# undocumented-public-function	Missing docstring in "public" # function
+    "D104",	# undocumented-public-package	Missing docstring in public package	"🛠"
+    "D105",	# undocumented-magic-method	Missing docstring in magic method
+    "D106",	# # undocumented-public-nested-class	Missing docstring in public nested class
+    "D107",	# # undocumented-public-init	Missing docstring in __init__
+    "ANN101", # missing-type-self
+    "TD003", # missing-todo-link missing issue link on the line following this TODO
+    "TD002", # missing-todo-author  missing author in TODO; try: `# TODO(<author_name>): ...` or `# TODO @<author_name>: ...`Ruff
+    "S101", # assert Use of assert detected	
+    "ANN002", #	missing-type-args	Missing type annotation for *{name}
+    "ANN003", #	missing-type-kwargs	Missing type annotation for **{name}
+    "RUF001", #	ambiguous-unicode-character-string	String contains ambiguous {}. Did you mean {}? Может на русскую "с" в комменте ругаться 
+    "RUF003", #	ambiguous-unicode-character-comment
+    "SLF001", # private-member-access	Private member accessed: {access} | учитывая, что в Django постоянно дергаем _Meta моделей и поля в духе _prefetched_objects_cache и т.д.
+    "DJ001", # django-nullable-model-string-field	Avoid using null=True on string-based fields such as	
+    "PGH004", # Use specific rule codes when using `noqa`
+    "TRY003", # Avoid specifying long messages outside the exception class
+    "EM102", # Exception must not use an f-string literal, assign to variable first
+    "RUF002", # Docstring contains ambiguous `у` (CYRILLIC SMALL LETTER U). Did you mean `y` (LATIN SMALL LETTER Y)?
+    "FBT001", # Boolean-typed positional argument in function definition
+    "FBT002", # Boolean default positional argument in function definition
+    "ANN204", # Missing return type annotation for special method `__init__`
+    "BLE001", # Do not catch blind exception
+    "EM101", # Exception must not use a string literal, assign to variable firstRuffEM101
+    "INP001", # Checks for packages that are missing an __init__.py file.
+]
+
+[tool.ruff.lint.flake8-annotations]
+mypy-init-return = true # ANN204 | checkers often allow you to omit the return type annotation for __init__ methods, as long as at least one argument has a type annotation
+
+[tool.ruff.lint.isort]
+force-wrap-aliases = true
+combine-as-imports = true
+
+
+[tool.django-stubs]
+django_settings_module = "server.configs.settings"  # Укажите правильный путь к настройкам Django
+
+[tool.mypy]
+plugins = [
+  "mypy_django_plugin.main",
+  "mypy_drf_plugin.main",
+]
+explicit_package_bases = true
+mypy_path = ["stubs"]          # то же, что mypy_path = stubs/
+files = ["."]
+check_untyped_defs = true
+# Один regex; несколько путей объединяем через |
+exclude = '(\.venv|stubs|venv)'
+
+[[tool.mypy.overrides]]
+module = ["*.migrations.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["graphene_django.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["computedfields.*"]
+ignore_missing_imports = true
+
