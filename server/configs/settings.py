@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -117,18 +118,27 @@ SPECTACULAR_SETTINGS = {
     },
     # Fixes file fields in Swagger UI
     "COMPONENT_SPLIT_REQUEST": True,
+    "AUTHENTICATION_WHITELIST": [],
+    "SERVE_AUTHENTICATION": [],
+    "SECURITY_SCHEMES": {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+        },
+    },
+    "SECURITY": [
+        {
+            "BearerAuth": [],
+        },
+    ],
 }
 
 # DRF settings
 REST_FRAMEWORK = {
-    # "EXTENSION_HANDLER": "config.extensions.core_exception_handler",
     "NON_FIELD_ERRORS_KEY": "error",
-    "EXCEPTION_HANDLER": "config.exceptions.drf_exception_handler",
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.TokenAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
-    ),
-    # "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
+    # "EXCEPTION_HANDLER": "config.exceptions.drf_exception_handler",
+    "DEFAULT_AUTHENTICATION_CLASSES": ("server.apps.core.auth.authentication.JWTAuthentication",),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
@@ -162,3 +172,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Auth settings
 AUTH_USER_MODEL = "core.User"
+
+
+# JWT settings
+JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", SECRET_KEY)
+JWT_ALGORITHM = "HS256"
+JWT_ACCESS_LIFETIME = timedelta(minutes=15)
+JWT_REFRESH_LIFETIME = timedelta(days=30)
+JWT_ISSUER = os.environ.get("JWT_ISSUER") or None
+JWT_AUDIENCE = os.environ.get("JWT_AUDIENCE") or None
