@@ -1,4 +1,5 @@
 alias r := run
+alias rb := runbot
 alias s := stop
 alias d := down
 alias m := migrate
@@ -19,6 +20,10 @@ BROWSER_PATH := env_var("BROWSER_PATH")
 run:
    docker compose up -d postgres
    ./manage.py runserver
+
+runbot:
+   docker compose up -d postgres
+   ./manage.py runbot
 
 up *args:
    docker compose up {{args}}
