@@ -20,14 +20,11 @@ LIBS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "rest_framework",
     "drf_spectacular",
     "corsheaders",
-
     "pghistory",
     "pgtrigger",
-
     "multiselectfield",
 ]
 
@@ -35,6 +32,10 @@ _apps_subdir = "server.apps"
 
 PROJECT_APPS = [
     f"{_apps_subdir}.core.apps.CoreConfig",
+    f"{_apps_subdir}.avatars.apps.AvatarsConfig",
+    f"{_apps_subdir}.users.apps.UsersConfig",
+    f"{_apps_subdir}.memory.apps.MemoryConfig",
+    f"{_apps_subdir}.bot.apps.BotConfig",
 ]
 
 INSTALLED_APPS = LIBS + PROJECT_APPS
@@ -191,3 +192,8 @@ JWT_ACCESS_LIFETIME = timedelta(minutes=15)
 JWT_REFRESH_LIFETIME = timedelta(days=30)
 JWT_ISSUER = os.environ.get("JWT_ISSUER") or None
 JWT_AUDIENCE = os.environ.get("JWT_AUDIENCE") or None
+
+
+# LLM settings
+OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
+OPENAI_MODEL = os.environ["OPENAI_MODEL"]
