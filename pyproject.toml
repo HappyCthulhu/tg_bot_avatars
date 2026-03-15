@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Backend for telegram web-app Affiliate Assistant"
 requires-python = ">=3.12"
 dependencies = [
+    "aiogram>=3",
     "django>=5.2.8",
     "django-cors-headers>=4.9.0",
     "django-multiselectfield>=1.0.1",
