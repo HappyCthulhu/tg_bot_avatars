@@ -197,3 +197,10 @@ JWT_AUDIENCE = os.environ.get("JWT_AUDIENCE") or None
 # LLM settings
 OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
 OPENAI_MODEL = os.environ["OPENAI_MODEL"]
+
+
+# Telegram bot settings
+BOT_TOKEN = os.environ["BOT_TOKEN"]
+
+# Redis settings
+REDIS_URL = os.environ["REDIS_URL"]

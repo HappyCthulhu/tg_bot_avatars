@@ -1,0 +1,24 @@
+FROM python:3.13-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    gcc \
+    postgresql-client \
+    netcat-openbsd \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY . .
+
+ENV UV_PROJECT_ENVIRONMENT="/app/.venv"
+ENV PATH="/app/.venv/bin:$PATH"
+
+RUN pip install uv && \
+    uv sync --frozen --no-dev
+
+COPY docker-entrypoint-bot.sh /docker-entrypoint-bot.sh
+RUN chmod +x /docker-entrypoint-bot.sh
+
+ENTRYPOINT ["/docker-entrypoint-bot.sh"]
+CMD ["/app/.venv/bin/python", "manage.py", "runbot"]

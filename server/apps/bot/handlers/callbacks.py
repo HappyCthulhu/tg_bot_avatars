@@ -33,6 +33,6 @@ async def avatar_callback_handler(callback: CallbackQuery, state: FSMContext) ->
     await sync_to_async(user.save)(update_fields=["active_avatar", "updated_at"])
 
     if callback.message is not None:
-        await callback.message.answer("Аватар выбран. Можешь писать сообщение.")
+        await callback.message.answer(f"Выбран аватар: {avatar.name}. Можешь писать сообщение.")
     await callback.answer()
     await state.set_state(DialogStates.dialog)

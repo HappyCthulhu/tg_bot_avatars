@@ -3,10 +3,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from asgiref.sync import sync_to_async
 
+from llm import LLMService, PromptBuilder
+from providers import RedisProvider
 from server.apps.bot.services import TelegramUserService
 from server.apps.bot.states import DialogStates
-from server.apps.llm.simple_llm import generate_reply
 from server.apps.users.models import User
+from services import DialogService, ShortMemoryService
 
 router = Router(name="bot-dialog")
 
@@ -25,9 +27,14 @@ async def dialog_message_handler(message: Message, state: FSMContext) -> None:
         await state.set_state(DialogStates.choosing_avatar)
         return
 
-    prompt_messages = [
-        {"role": "system", "content": user.active_avatar.system_prompt},
-        {"role": "user", "content": message.text},
-    ]
-    reply = await generate_reply(prompt_messages)
+    dialog_service = DialogService(
+        short_memory_service=ShortMemoryService(redis_provider=RedisProvider()),
+        prompt_builder=PromptBuilder(),
+        llm_service=LLMService(),
+    )
+    reply = await dialog_service.handle_user_message(
+        user=user,
+        avatar=user.active_avatar,
+        text=message.text,
+    )
     await message.answer(reply)

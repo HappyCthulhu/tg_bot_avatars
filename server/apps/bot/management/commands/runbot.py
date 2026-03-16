@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import asyncio
-import os
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
+from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
 from server.apps.bot.handlers import bot_router
@@ -17,7 +17,7 @@ class Command(BaseCommand):
         asyncio.run(self._run())
 
     async def _run(self) -> None:
-        token = os.getenv("BOT_TOKEN")
+        token = settings.BOT_TOKEN
         if not token:
             raise CommandError("BOT_TOKEN environment variable is required.")
 
