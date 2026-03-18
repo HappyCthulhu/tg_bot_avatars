@@ -37,4 +37,4 @@ class ShortMemoryService:
 
     async def clear_dialog(self, user_id: int, avatar_id: int) -> None:
         key = self._dialog_key(user_id, avatar_id)
-        await self._redis.ltrim(key, 1, 0)
+        await self._redis.delete(key)

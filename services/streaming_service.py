@@ -5,6 +5,7 @@ import time
 from typing import TYPE_CHECKING
 
 from aiogram.exceptions import TelegramBadRequest, TelegramRetryAfter
+from django.conf import settings
 
 if TYPE_CHECKING:
     from aiogram import Bot
@@ -13,7 +14,7 @@ if TYPE_CHECKING:
 
 
 class StreamingService:
-    STREAM_EDIT_INTERVAL = 0.1
+    STREAM_EDIT_INTERVAL = settings.STREAM_EDIT_INTERVAL
 
     def __init__(self, bot: Bot) -> None:
         self._bot = bot

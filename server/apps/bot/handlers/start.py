@@ -20,7 +20,7 @@ async def start_handler(message: Message, state: FSMContext) -> None:
     telegram_user_service = TelegramUserService()
     await telegram_user_service.get_or_create_user(message.from_user)
 
-    avatars = await sync_to_async(list)(Avatar.objects.all().order_by("id"))
+    avatars = await sync_to_async(list)(Avatar.objects.filter(active=True).order_by("id"))
     if not avatars:
         await message.answer("Аватары пока не настроены.")
         await state.clear()

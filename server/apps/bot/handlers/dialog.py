@@ -12,7 +12,15 @@ from providers import RedisProvider
 from server.apps.bot.services import TelegramUserService
 from server.apps.bot.states import DialogStates
 from server.apps.users.models import User
-from services import DialogService, FactTriggerService, MemoryService, ShortMemoryService, StreamingService
+from services import (
+    DialogService,
+    FactTriggerService,
+    LLMRateLimitService,
+    MemoryService,
+    ShortMemoryService,
+    StreamingService,
+)
+from services.exceptions import LLMRateLimitExceededError
 
 router = Router(name="bot-dialog")
 
@@ -26,7 +34,7 @@ async def dialog_message_handler(message: Message, state: FSMContext) -> None:
     user = await telegram_user_service.get_or_create_user(message.from_user)
     user = await sync_to_async(User.objects.select_related("active_avatar").get)(id=user.id)
 
-    if user.active_avatar is None:
+    if user.active_avatar is None or not user.active_avatar.active:
         await message.answer("Сначала выбери аватара через /start.")
         await state.set_state(DialogStates.choosing_avatar)
         return
@@ -45,12 +53,17 @@ async def dialog_message_handler(message: Message, state: FSMContext) -> None:
         redis_provider=redis_provider,
         interval=settings.FACT_TRIGGER_INTERVAL,
     )
+    llm_rate_limit_service = LLMRateLimitService(
+        redis_provider=redis_provider,
+        limit_seconds=settings.LLM_RATE_LIMIT_SECONDS,
+    )
     dialog_service = DialogService(
         short_memory_service=short_memory_service,
         prompt_builder=prompt_builder,
         llm_service=llm_service,
         memory_service=memory_service,
         fact_trigger_service=fact_trigger_service,
+        llm_rate_limit_service=llm_rate_limit_service,
         streaming_service=StreamingService(bot=bot),
     )
 
@@ -72,6 +85,8 @@ async def dialog_message_handler(message: Message, state: FSMContext) -> None:
             text=message.text,
             chat_id=message.chat.id,
         )
+    except LLMRateLimitExceededError:
+        await message.answer("Слишком частые запросы к ИИ. Подожди пару секунд.")
     except Exception as exc:
         logger.exception("Error handling user message stream", exc_info=exc)
         await message.answer("ИИ сейчас перегружен. Попробуй позже.")

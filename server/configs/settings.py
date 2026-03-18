@@ -210,3 +210,10 @@ REDIS_URL = os.environ["REDIS_URL"]
 SHORT_MEMORY_SIZE = int(os.environ.get("SHORT_MEMORY_SIZE", "10"))
 SHORT_MEMORY_TTL = int(os.environ.get("SHORT_MEMORY_TTL", "86400"))
 FACT_TRIGGER_INTERVAL = int(os.environ.get("FACT_TRIGGER_INTERVAL", "5"))
+MAX_PROMPT_TOKENS = int(os.environ.get("MAX_PROMPT_TOKENS", "8000"))
+
+# Streaming settings
+STREAM_EDIT_INTERVAL = float(os.environ.get("STREAM_EDIT_INTERVAL", "0.1"))
+
+# LLM rate limit settings
+LLM_RATE_LIMIT_SECONDS = int(os.environ.get("LLM_RATE_LIMIT_SECONDS", "2"))

@@ -3,16 +3,20 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING
 
+from django.conf import settings
 from django.utils import timezone
 from loguru import logger
 
 from domain import Message
+from services.exceptions import LLMRateLimitExceededError
+from utils import count_prompt_tokens
 
 if TYPE_CHECKING:
     from llm import LLMService, PromptBuilder
     from server.apps.avatars.models import Avatar
     from server.apps.users.models import User
     from services.fact_trigger_service import FactTriggerService
+    from services.llm_rate_limit_service import LLMRateLimitService
     from services.memory_service import MemoryService
     from services.short_memory_service import ShortMemoryService
     from services.streaming_service import StreamingService
@@ -26,6 +30,7 @@ class DialogService:
         llm_service: LLMService,
         memory_service: MemoryService | None = None,
         fact_trigger_service: FactTriggerService | None = None,
+        llm_rate_limit_service: LLMRateLimitService | None = None,
         streaming_service: StreamingService | None = None,
     ) -> None:
         self._short_memory_service = short_memory_service
@@ -33,6 +38,7 @@ class DialogService:
         self._llm_service = llm_service
         self._memory_service = memory_service
         self._fact_trigger_service = fact_trigger_service
+        self._llm_rate_limit_service = llm_rate_limit_service
         self._streaming_service = streaming_service
         self._background_tasks: set[asyncio.Task[None]] = set()
 
@@ -42,6 +48,7 @@ class DialogService:
         avatar: Avatar,
         text: str,
     ) -> str:
+        await self._ensure_rate_limit(user.id)
         prompt = await self._build_dialog_prompt(user=user, avatar=avatar, user_text=text)
         reply = await self._llm_service.generate(prompt)
         await self._save_dialog_messages(user=user, avatar=avatar, user_text=text, assistant_text=reply)
@@ -59,6 +66,7 @@ class DialogService:
             msg = "StreamingService is required for handle_user_message_stream."
             raise RuntimeError(msg)
 
+        await self._ensure_rate_limit(user.id)
         prompt = await self._build_dialog_prompt(user=user, avatar=avatar, user_text=text)
         reply = await self._streaming_service.stream_reply(
             chat_id=chat_id,
@@ -75,12 +83,17 @@ class DialogService:
         long_term_facts = []
         if self._memory_service is not None:
             long_term_facts = await self._memory_service.get_facts_for_prompt(user.id, avatar.id)
-        return self._prompt_builder.build_dialog_prompt(
-            system_prompt=avatar.system_prompt,
-            short_memory=short_memory,
-            user_message=user_text,
-            long_term_facts=long_term_facts,
-        )
+
+        while True:
+            prompt = self._prompt_builder.build_dialog_prompt(
+                system_prompt=avatar.system_prompt,
+                short_memory=short_memory,
+                user_message=user_text,
+                long_term_facts=long_term_facts,
+            )
+            if count_prompt_tokens(prompt) <= settings.MAX_PROMPT_TOKENS or not short_memory:
+                return prompt
+            short_memory = short_memory[1:]
 
     async def _save_dialog_messages(self, user: User, avatar: Avatar, user_text: str, assistant_text: str) -> None:
         """Save user and assistant messages to short memory."""
@@ -110,3 +123,11 @@ class DialogService:
             await self._memory_service.extract_facts(user_id=user_id, avatar_id=avatar_id)
         except Exception:
             logger.exception("Background fact extraction failed")
+
+    async def _ensure_rate_limit(self, user_id: int) -> None:
+        if self._llm_rate_limit_service is None:
+            return
+        allowed = await self._llm_rate_limit_service.allow_request(user_id)
+        if not allowed:
+            msg = "LLM request rate limit exceeded."
+            raise LLMRateLimitExceededError(msg)
