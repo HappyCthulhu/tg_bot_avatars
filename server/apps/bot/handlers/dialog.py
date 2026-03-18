@@ -1,14 +1,17 @@
+import asyncio
+
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from asgiref.sync import sync_to_async
+from loguru import logger
 
 from llm import LLMService, PromptBuilder
 from providers import RedisProvider
 from server.apps.bot.services import TelegramUserService
 from server.apps.bot.states import DialogStates
 from server.apps.users.models import User
-from services import DialogService, ShortMemoryService
+from services import DialogService, ShortMemoryService, StreamingService
 
 router = Router(name="bot-dialog")
 
@@ -27,14 +30,35 @@ async def dialog_message_handler(message: Message, state: FSMContext) -> None:
         await state.set_state(DialogStates.choosing_avatar)
         return
 
+    bot = message.bot
     dialog_service = DialogService(
         short_memory_service=ShortMemoryService(redis_provider=RedisProvider()),
         prompt_builder=PromptBuilder(),
         llm_service=LLMService(),
+        streaming_service=StreamingService(bot=bot),
     )
-    reply = await dialog_service.handle_user_message(
-        user=user,
-        avatar=user.active_avatar,
-        text=message.text,
-    )
-    await message.answer(reply)
+
+    stop_typing = asyncio.Event()
+
+    async def _typing_loop() -> None:
+        while not stop_typing.is_set():
+            await bot.send_chat_action(chat_id=message.chat.id, action="typing")
+            try:
+                await asyncio.wait_for(stop_typing.wait(), timeout=4)
+            except TimeoutError:
+                continue
+
+    typing_task = asyncio.create_task(_typing_loop())
+    try:
+        await dialog_service.handle_user_message_stream(
+            user=user,
+            avatar=user.active_avatar,
+            text=message.text,
+            chat_id=message.chat.id,
+        )
+    except Exception as exc:
+        logger.exception("Error handling user message stream", exc_info=exc)
+        await message.answer("ИИ сейчас перегружен. Попробуй позже.")
+    finally:
+        stop_typing.set()
+        await typing_task
