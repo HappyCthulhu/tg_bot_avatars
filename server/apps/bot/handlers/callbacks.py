@@ -22,9 +22,9 @@ async def avatar_callback_handler(callback: CallbackQuery, state: FSMContext) ->
         return
     avatar_id = int(avatar_id_raw)
 
-    avatar = await sync_to_async(Avatar.objects.filter(id=avatar_id).first)()
+    avatar = await sync_to_async(Avatar.objects.filter(id=avatar_id, active=True).first)()
     if avatar is None:
-        await callback.answer("Аватар не найден", show_alert=True)
+        await callback.answer("Аватар не найден или недоступен", show_alert=True)
         return
 
     telegram_user_service = TelegramUserService()

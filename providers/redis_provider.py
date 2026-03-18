@@ -23,3 +23,6 @@ class RedisProvider:
 
     async def incr(self, key: str) -> int:
         return int(await self._client.incr(key))
+
+    async def delete(self, key: str) -> None:
+        await self._client.delete(key)
