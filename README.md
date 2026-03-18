@@ -3,6 +3,9 @@
 This project is a Django + Aiogram backend for a Telegram bot where users chat with AI avatars.  
 Each avatar has its own personality (`system_prompt`), the bot streams replies, stores short-term dialog context in Redis, and keeps long-term user facts in PostgreSQL.
 
+## Link
+[@avatarschatbot](t.me/avatarschatbot)
+
 ## Architecture
 
 ```mermaid
