@@ -46,7 +46,7 @@ services:
     volumes:
       - ./staticfiles:/app/staticfiles
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:8001:8001"
     environment:
       DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE}
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
