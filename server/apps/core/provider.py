@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -8,6 +9,8 @@ from loguru import logger
 from requests import Response, Session
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+from server.configs import settings
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, MutableMapping
@@ -23,6 +26,55 @@ class NormalizedResponse:
     status_code: int
     headers: dict[str, str]
     body: ResponseBody
+
+
+@dataclass(slots=True)
+class LLMProxyConfig:
+    """Configuration for routing LLM requests through a private proxy."""
+
+    proxy_url: str | None
+    models: frozenset[str]
+
+    @classmethod
+    def from_env(cls) -> LLMProxyConfig:
+        """Build config from environment variables.
+
+        Variables:
+            LLM_PRIVATE_PROXY_URL: Proxy URL (for example: http://user:pass@host:port).
+            LLM_PRIVATE_PROXY_MODELS: Comma-separated model list.
+                Empty value means "all models" when proxy URL is set.
+                Supports aliases: * and all.
+
+        """
+        proxy_url = (settings.LLM_PRIVATE_PROXY_URL or "").strip() or None
+        raw_models = settings.LLM_PRIVATE_PROXY_MODELS
+
+        if raw_models is None:
+            models = frozenset()
+        else:
+            parsed_models = {
+                model.strip()
+                for model in raw_models.split(",")
+                if model.strip()
+            }
+            models = frozenset(parsed_models)
+
+        return cls(proxy_url=proxy_url, models=models)
+
+    def should_proxy_model(self, model: str) -> bool:
+        """Return True when model request should go through private proxy."""
+        if not self.proxy_url:
+            return False
+
+        # Empty models list means "proxy for all models".
+        if not self.models:
+            return True
+
+        lowered_models = {value.lower() for value in self.models}
+        if "*" in lowered_models or "all" in lowered_models:
+            return True
+
+        return model in self.models
 
 
 class ProviderRequestError(Exception):

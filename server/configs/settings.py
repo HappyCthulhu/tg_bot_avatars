@@ -217,3 +217,7 @@ STREAM_EDIT_INTERVAL = float(os.environ.get("STREAM_EDIT_INTERVAL", "0.1"))
 
 # LLM rate limit settings
 LLM_RATE_LIMIT_SECONDS = int(os.environ.get("LLM_RATE_LIMIT_SECONDS", "2"))
+
+# LLM proxy settings
+LLM_PRIVATE_PROXY_URL = os.environ.get("LLM_PRIVATE_PROXY_URL")
+LLM_PRIVATE_PROXY_MODELS = os.environ.get("LLM_PRIVATE_PROXY_MODELS")

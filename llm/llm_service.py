@@ -4,7 +4,10 @@ import json
 import os
 from typing import TYPE_CHECKING, Any
 
+import httpx
 from openai import AsyncOpenAI
+
+from server.apps.core.provider import LLMProxyConfig
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -14,7 +17,20 @@ class LLMService:
     def __init__(self) -> None:
         self._api_key = os.environ["OPENAI_API_KEY"]
         self._model = os.environ.get("OPENAI_MODEL", "gpt-4o-mini")
-        self._client = AsyncOpenAI(api_key=self._api_key)
+        self._proxy_config = LLMProxyConfig.from_env()
+        self._client = self._build_client()
+
+    def _build_client(self) -> AsyncOpenAI:
+        if not self._proxy_config.should_proxy_model(self._model):
+            return AsyncOpenAI(api_key=self._api_key)
+
+        try:
+            proxy_client = httpx.AsyncClient(proxy=self._proxy_config.proxy_url)
+        except TypeError:
+            # Backward compatibility for older httpx versions.
+            proxy_client = httpx.AsyncClient(proxies=self._proxy_config.proxy_url)
+
+        return AsyncOpenAI(api_key=self._api_key, http_client=proxy_client)
 
     async def generate(self, messages: list[dict[str, Any]]) -> str:
         response = await self._client.chat.completions.create(
