@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
+from django.conf import settings
+
 from domain import Message
 
 if TYPE_CHECKING:
@@ -10,8 +12,8 @@ if TYPE_CHECKING:
 
 
 class ShortMemoryService:
-    SHORT_MEMORY_SIZE = 10  # TODO: нужно создать в settings.py константу.
-    SHORT_MEMORY_TTL = 86400  # TODO: нужно создать в settings.py константу.
+    SHORT_MEMORY_SIZE = settings.SHORT_MEMORY_SIZE
+    SHORT_MEMORY_TTL = settings.SHORT_MEMORY_TTL
 
     def __init__(self, redis_provider: RedisProvider) -> None:
         self._redis = redis_provider

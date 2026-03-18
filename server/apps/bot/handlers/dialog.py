@@ -4,6 +4,7 @@ from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from asgiref.sync import sync_to_async
+from django.conf import settings
 from loguru import logger
 
 from llm import LLMService, PromptBuilder
@@ -11,7 +12,7 @@ from providers import RedisProvider
 from server.apps.bot.services import TelegramUserService
 from server.apps.bot.states import DialogStates
 from server.apps.users.models import User
-from services import DialogService, ShortMemoryService, StreamingService
+from services import DialogService, FactTriggerService, MemoryService, ShortMemoryService, StreamingService
 
 router = Router(name="bot-dialog")
 
@@ -31,10 +32,25 @@ async def dialog_message_handler(message: Message, state: FSMContext) -> None:
         return
 
     bot = message.bot
+    redis_provider = RedisProvider()
+    llm_service = LLMService()
+    prompt_builder = PromptBuilder()
+    short_memory_service = ShortMemoryService(redis_provider=redis_provider)
+    memory_service = MemoryService(
+        short_memory_service=short_memory_service,
+        prompt_builder=prompt_builder,
+        llm_service=llm_service,
+    )
+    fact_trigger_service = FactTriggerService(
+        redis_provider=redis_provider,
+        interval=settings.FACT_TRIGGER_INTERVAL,
+    )
     dialog_service = DialogService(
-        short_memory_service=ShortMemoryService(redis_provider=RedisProvider()),
-        prompt_builder=PromptBuilder(),
-        llm_service=LLMService(),
+        short_memory_service=short_memory_service,
+        prompt_builder=prompt_builder,
+        llm_service=llm_service,
+        memory_service=memory_service,
+        fact_trigger_service=fact_trigger_service,
         streaming_service=StreamingService(bot=bot),
     )
 

@@ -204,3 +204,9 @@ BOT_TOKEN = os.environ["BOT_TOKEN"]
 
 # Redis settings
 REDIS_URL = os.environ["REDIS_URL"]
+
+
+# Memory settings
+SHORT_MEMORY_SIZE = int(os.environ.get("SHORT_MEMORY_SIZE", "10"))
+SHORT_MEMORY_TTL = int(os.environ.get("SHORT_MEMORY_TTL", "86400"))
+FACT_TRIGGER_INTERVAL = int(os.environ.get("FACT_TRIGGER_INTERVAL", "5"))

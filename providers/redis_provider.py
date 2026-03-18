@@ -20,3 +20,6 @@ class RedisProvider:
 
     async def expire(self, key: str, seconds: int) -> None:
         await self._client.expire(key, seconds)
+
+    async def incr(self, key: str) -> int:
+        return int(await self._client.incr(key))

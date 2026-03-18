@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 from typing import TYPE_CHECKING, Any
 
@@ -33,3 +34,23 @@ class LLMService:
             delta = chunk.choices[0].delta.content if chunk.choices else None
             if delta:
                 yield delta
+
+    async def extract_facts(self, messages: list[dict[str, Any]]) -> list[str]:
+        response = await self._client.chat.completions.create(
+            model=self._model,
+            messages=messages,
+        )
+        content = response.choices[0].message.content or "[]"
+        return self._parse_facts(content)
+
+    def _parse_facts(self, content: str) -> list[str]:
+        trimmed = content.strip()
+        if trimmed.startswith("```"):
+            trimmed = trimmed.replace("```json", "").replace("```", "").strip()
+        try:
+            parsed = json.loads(trimmed)
+        except json.JSONDecodeError:
+            return []
+        if not isinstance(parsed, list):
+            return []
+        return [str(item).strip() for item in parsed if str(item).strip()]
