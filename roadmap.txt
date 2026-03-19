@@ -1,0 +1,128 @@
+# 0. Цель проекта
+
+Реализовать **Telegram-бота с AI-аватарами**, который:
+
+1. ведёт диалог через LLM
+2. хранит **краткосрочную память** (Redis)
+3. извлекает **долгосрочные факты** (PostgreSQL)
+4. использует **system_prompt аватара**
+5. стримит ответ пользователю (editMessageText)
+6. извлекает факты **каждые N сообщений**
+7. строит prompt из:
+
+```
+system_prompt
+long-term memory
+short-term memory
+user message
+```
+
+---
+
+# 1. Технологический стек
+
+### Backend
+
+```
+Python 3.11+
+Django
+Aiogram 3
+```
+
+---
+
+### База данных
+
+```
+PostgreSQL
+```
+
+---
+
+### Short memory
+
+```
+Redis
+```
+
+---
+
+### LLM
+
+```
+OpenAI API (GPT-4 / GPT-4o)
+```
+
+---
+
+### Инфраструктура
+
+```
+Docker
+Docker Compose
+```
+
+---
+
+# 2. Общая архитектура системы
+
+Проект разделён на слои:
+
+```
+Django apps → data layer
+services → business logic
+providers → external integrations
+llm → prompt engineering
+bot → transport layer
+domain → domain entities
+```
+
+---
+
+# 3. Django apps
+
+Всего **4 Django apps**.
+
+```
+users
+avatars
+memory
+bot
+```
+
+---
+
+# 4. Django app: users
+
+### назначение
+
+хранит пользователей системы.
+
+---
+
+## модель
+
+```
+User
+```
+
+поля
+
+```
+id
+active_avatar_id
+created_at
+```
+
+---
+
+# 5. Django app: avatars
+
+### назначение
+
+AI-персонажи.
+
+---
+roadmap.txt                                                                                                                                                                                                                             1,2            Top
+
+

@@ -1,0 +1,54 @@
+Table users [headercolor: #175e7a] {
+        id integer [ pk, increment, not null, unique ]
+        active_avatar_id integer
+}
+
+Table avatars [headercolor: #175e7a] {
+        id integer [ pk, increment, not null, unique ]
+        name varchar [ not null ]
+        system_prompt text [ not null ]
+}
+
+Table memory_facts [headercolor: #175e7a] {
+        id integer [ pk, increment, not null, unique ]
+        text text [ not null ]
+        avatar_id integer [ not null ]
+        user_id integer [ not null ]
+        created_at timestamp [ not null, default: `now()` ]
+
+        indexes {
+                (user_id, avatar_id) [ name: 'facts_index_0' ]
+        }
+}
+
+Table telegram_user [headercolor: #175e7a] {
+        id integer [ pk, increment, not null, unique ]
+        user_id integer [ not null, unique ]
+        telegram_id bigint [ not null, unique ]
+        first_name varchar
+        last_name varchar
+        language_code varchar
+        is_premium boolean
+        photo_url text
+        added_to_attachment_menu boolean
+        allow_write_to_pm boolean
+        last_auth_date timestamp
+        last_query_id varchar
+        last_start_param varchar
+}
+
+Ref fk_avatar_facts_user_id_users {
+        memory_facts.user_id > users.id [ delete: cascade, update: no action ]
+}
+
+Ref fk_telegram_user_user_users {
+        telegram_user.user_id - users.id [ delete: no action, update: no action ]
+}
+
+Ref fk_users_avatar_id_avatars {
+        users.active_avatar_id - avatars.id [ delete: set null, update: no action ]
+}
+
+Ref fk_avatar_facts_avatar_id_avatars {
+        memory_facts.avatar_id > avatars.id [ delete: cascade, update: no action ]
+
