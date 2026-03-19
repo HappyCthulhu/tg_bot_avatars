@@ -5,7 +5,7 @@ Each avatar has its own personality (`system_prompt`), the bot streams replies, 
 
 ## 🎥 Demo
 
-[![Watch the demo](https://img.youtube.com/vi/smt0Hv9M7wk/maxresdefault.jpg)](https://youtu.be/smt0Hv9M7wk)
+[![Watch the demo](https://postimg.cc/67hzm2h1)](https://youtu.be/smt0Hv9M7wk)
 
 ## Link
 [@avatarschatbot](t.me/avatarschatbot)
